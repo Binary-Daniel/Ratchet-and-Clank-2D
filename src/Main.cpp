@@ -97,7 +97,7 @@ int main()
 	l1m2.setPosition(64, 829);
 	//lava colision detection
 	RectangleShape lava(Vector2f(window.getSize().x, 2.f));
-	lava.setFillColor(Color::White);
+	lava.setFillColor(Color::Transparent);
 	lava.setPosition(0, 921);
 
 	//Fiende: Liten Syphoid
