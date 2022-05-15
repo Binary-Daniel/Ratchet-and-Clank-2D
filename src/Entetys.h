@@ -1,3 +1,4 @@
+#pragma once
 #include "Platform/Platform.hpp"
 #include <math.h>
 
@@ -7,11 +8,10 @@
 class KPBullet
 {
 public:
-	KPBullet(float SpawnX, float SpawnY)
+	KPBullet()
 	{
 		bullet.setRadius(10);
 		bullet.setFillColor(sf::Color::Yellow);
-		bullet.setPosition(SpawnX, SpawnY);
 		bullet.setOrigin(bullet.getRadius(), bullet.getRadius());
 	}
 

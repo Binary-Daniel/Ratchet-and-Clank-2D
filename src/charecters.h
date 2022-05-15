@@ -1,3 +1,4 @@
+#pragma once
 #include "Platform/Platform.hpp"
 #include <math.h>
 #include <stdio.h>
@@ -13,11 +14,8 @@ public:
 	//Ratchet()
 	//{}
 	int hp = 3;
-	float RSPX, RSPY;
-	Ratchet(float SPX, float SPY)
+	Ratchet()
 	{
-		RSPX = SPX;
-		RSPY = SPY;
 		float rsx = 120;
 		float rsy = 240;
 
@@ -26,39 +24,63 @@ public:
 		player.setTexture(&RBt);
 		arm.setTexture(&RAt);
 
-		player.setPosition(sf::Vector2f(SPX, SPY));
 		player.setSize({ rsx, rsy });
 
-		collision.setPosition(player.getPosition().x + (player.getSize().x) / 2 + 12, player.getPosition().y);
 		collision.setSize({ 8, player.getSize().y });
 		collision.setFillColor(sf::Color::Yellow);
 
-		arm.setPosition((player.getPosition().x + (player.getSize().x) / 2 - 4) - 8 * 2 + 25, player.getPosition().y + 8 * 5 + 24);
+
 		arm.setSize({ 152, 136 });
 		arm.setOrigin(25, 24);
 		arm.setRotation(atan2(sf::Mouse::getPosition().y - arm.getPosition().y, sf::Mouse::getPosition().x - arm.getPosition().x) * 180 / PI * -1);
+
+		BulletSpawn[0].position = sf::Vector2f(arm.getPosition().x, arm.getPosition().y);
+		BulletSpawn[1].position = sf::Vector2f(arm.getPosition().x + 150 * cos(arm.getRotation() * (PI / 180) + 0.71), arm.getPosition().y + 150 * sin(arm.getRotation() * (PI / 180) + 0.71));
+		BulletSpawn[0].color = sf::Color::Red;
+		BulletSpawn[1].color = sf::Color::Red;
+
+		Range[0].position = sf::Vector2f(arm.getPosition().x, arm.getPosition().y);
+		Range[1].position = sf::Vector2f(arm.getPosition().x + 500 * cos(arm.getRotation() * (PI / 180) + 0.71), arm.getPosition().y + 550 * sin(arm.getRotation() * (PI / 180) + 0.71));
+		Range[0].color = sf::Color::Blue;
+		Range[1].color = sf::Color::Blue;
+
+		player.setOutlineThickness(3);
+		player.setOutlineColor(sf::Color::Green);
+		arm.setOutlineThickness(3);
+		arm.setOutlineColor(sf::Color::Green);
 	}
 
 	void StartPos(sf::Vector2f pos)
 	{
+		this->startpos = pos;
 		player.setPosition(pos);
+		collision.setPosition(player.getPosition().x + (player.getSize().x) / 2 + 12, player.getPosition().y);
+		arm.setPosition((player.getPosition().x + (player.getSize().x) / 2 - 4) - 8 * 2 + 25, player.getPosition().y + 8 * 5 + 24);
 	}
 
-	float getArmPosX(void)
+	sf::Vector2f getArmPos(void) const
 	{
-		return arm.getPosition().x;
-	}
-	float getArmPosY(void)
-	{
-		return arm.getPosition().y;
+		return arm.getPosition();
 	}
 	void RotateArm(void)
 	{
 		arm.setRotation(atan2(sf::Mouse::getPosition().x - arm.getPosition().x, sf::Mouse::getPosition().y - arm.getPosition().y) * 180 / PI * -1 + 49);
+		BulletSpawn[1].position = sf::Vector2f(arm.getPosition().x + 150 * cos(arm.getRotation() * (PI / 180) + 0.715), arm.getPosition().y + 150 * sin(arm.getRotation() * (PI / 180) + 0.715));
+		Range[1].position = sf::Vector2f(arm.getPosition().x + 750 * cos(arm.getRotation() * (PI / 180) + 0.715), arm.getPosition().y + 750 * sin(arm.getRotation() * (PI / 180) + 0.715));
 	}
 	float getArmRotation(void)
 	{
 		return arm.getRotation();
+		BulletSpawn[1].position = sf::Vector2f(arm.getPosition().x + 150 * cos(arm.getRotation() * (PI / 180) + 0.715), arm.getPosition().y + 150 * sin(arm.getRotation() * (PI / 180) + 0.715));
+	}
+
+	sf::Vector2f getBulletSpawn() const
+	{
+		return BulletSpawn[1].position;
+	}
+	sf::Vector2f getRange() const
+	{
+		return Range[1].position;
 	}
 
 	void Damage(void)
@@ -66,10 +88,16 @@ public:
 		hp--;
 		if (hp < -3)
 		{
-			player.setPosition(sf::Vector2f(RSPX, RSPY));
+			player.setPosition(startpos);
 			collision.setPosition(player.getPosition().x + (player.getSize().x) / 2 + 12, player.getPosition().y);
 			arm.setPosition((player.getPosition().x + (player.getSize().x) / 2 - 4) - 8 * 2 + 25, player.getPosition().y + 8 * 5 + 24);
 			hp = 3;
+			//förflyta positionen för projectilens start kordinat
+			BulletSpawn[0].position = sf::Vector2f(arm.getPosition().x, arm.getPosition().y);
+			BulletSpawn[1].position = sf::Vector2f(arm.getPosition().x + 150 * cos(arm.getRotation() * (PI / 180) + 0.715), arm.getPosition().y + 150 * sin(arm.getRotation() * (PI / 180) + 0.715));
+
+			Range[0].position = sf::Vector2f(arm.getPosition().x, arm.getPosition().y);
+			Range[1].position = sf::Vector2f(arm.getPosition().x + 750 * cos(arm.getRotation() * (PI / 180) + 0.715), arm.getPosition().y + 750 * sin(arm.getRotation() * (PI / 180) + 0.715));
 		}
 	}
 
@@ -78,23 +106,22 @@ public:
 		player.move(moveX, moveY);
 		collision.move(moveX, moveY);
 		arm.move(moveX, moveY);
+		//förflyta positionen för projectilens start kordinat
+		BulletSpawn[0].position = sf::Vector2f(arm.getPosition().x, arm.getPosition().y);
+		BulletSpawn[1].position = sf::Vector2f(arm.getPosition().x + 150 * cos(arm.getRotation() * (PI / 180) + 0.715), arm.getPosition().y + 150 * sin(arm.getRotation() * (PI / 180) + 0.715));
+
+		Range[0].position = sf::Vector2f(arm.getPosition().x, arm.getPosition().y);
+		Range[1].position = sf::Vector2f(arm.getPosition().x + 750 * cos(arm.getRotation() * (PI / 180) + 0.715), arm.getPosition().y + 750 * sin(arm.getRotation() * (PI / 180) + 0.715));
 	}
 
-	float getPositionX(void)
+	sf::Vector2f getPosition(void) const
 	{
-		return player.getPosition().x;
+		return player.getPosition();
 	}
-	float getPositionY(void)
+
+	sf::Vector2f getSize(void) const
 	{
-		return player.getPosition().y;
-	}
-	float getSizeX(void)
-	{
-		return player.getSize().x;
-	}
-	float getSizeY(void)
-	{
-		return player.getSize().y;
+		return player.getSize();
 	}
 
 	sf::FloatRect getHitBox(void) const
@@ -113,7 +140,8 @@ public:
 			window.draw(player);
 			window.draw(collision);
 			window.draw(arm);
-			//window.draw(BulletSpawn, 2, sf::Lines);
+			window.draw(Range, 2, sf::Lines);
+			window.draw(BulletSpawn, 2, sf::Lines);
 		}
 	}
 
@@ -123,18 +151,27 @@ private:
 	sf::RectangleShape arm;
 	sf::Texture RBt;
 	sf::Texture RAt;
+	sf::Vertex BulletSpawn[2];
+	sf::Vertex Range[2];
+	float BulletRangeDieX = 0, BulletRangeDieY = 0;
+	sf::Vector2f(startpos);
 };
 
 class Ssyphoid
 {
 public:
-	Ssyphoid()
-	{}
-
 	int MinPos;
 	int MaxPos;
 
-	Ssyphoid(int Time, int hp, int minX , int maxX)
+	Ssyphoid()
+	{
+		Sst.loadFromFile("content/charecters/zyphoid/Small_syphoid.png");
+		enemy.setSize(sf::Vector2f(Sst.getSize().x, Sst.getSize().y));
+		enemy.setFillColor(sf::Color::White);
+		enemy.setTexture(&Sst);
+	}
+
+	void setings(int Time, int hp, int minX, int maxX)
 	{
 		this->hp = hp;
 		this->MinPos = minX;
@@ -145,12 +182,7 @@ public:
 		{
 			srand(time(NULL));
 		}
-
-		Sst.loadFromFile("content/charecters/zyphoid/Small_syphoid.png");
-		enemy.setSize(sf::Vector2f(Sst.getSize().x, Sst.getSize().y));
 		enemy.setPosition(rand() % minX + 200, 732);
-		enemy.setFillColor(sf::Color::White);
-		enemy.setTexture(&Sst);
 	}
 	void setPosition(sf::Vector2f pos)
 	{

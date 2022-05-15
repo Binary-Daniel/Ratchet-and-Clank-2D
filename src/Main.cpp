@@ -1,4 +1,5 @@
 #include "Entetys.h"
+#include "Game.h"
 #include "Platform/Platform.hpp"
 #include "charecters.h"
 #include "rectanglebutton.h"
@@ -28,6 +29,7 @@ int main()
 	//säter fps:en till 200
 	window.setFramerateLimit(200);
 
+	Game game(window.getSize().x, window.getSize().y);
 	//hämta fönstrets storlek
 	float x = window.getSize().x;
 	float y = window.getSize().y;
@@ -35,20 +37,12 @@ int main()
 	//level värde 0 = meny
 	int level = 0;
 
-	//START MENY
-	//skapa två rektangel som bakgrund
-	RectangleShape title(Vector2f(x, y));
-	title.setFillColor(Color::White);
-
-	RectangleShape mainmenu(Vector2f(x, y));
-	mainmenu.setFillColor(Color::White);
-	//säter en bild på rektanglarna
-	Texture titleTexture;
-	titleTexture.loadFromFile("content/levels/menu/title.png");
-	title.setTexture(&titleTexture);
-	Texture mainmenuTexture;
-	mainmenuTexture.loadFromFile("content/levels/menu/main_menu.png");
-	mainmenu.setTexture(&mainmenuTexture);
+	//spela musik
+	Music music;
+	if (!music.openFromFile("content/levels/menu/menu.ogg"))
+		return -1; // error
+	music.play();
+	music.setLoop(true);
 
 	//skapa en ny font och lada upp den
 	Font font;
@@ -67,67 +61,9 @@ int main()
 	exit.setPosition({ x / 2 - 350, y / 2 + 30 });
 	exit.setFont(font);
 
-	//spela musik
-	Music music;
-	if (!music.openFromFile("content/levels/menu/menu.ogg"))
-		return -1; // error
-	music.play();
-	music.setLoop(true);
-
 	//Menu Timing Clock
 	Clock clock;
 	Time passedTime;
-
-
-	//level obeject
-	//Agorinan Battleplex texture
-	Texture level1;
-	level1.loadFromFile("content/levels/Agorian_battleplex/Agorian Battleplex.png");
-	RectangleShape l1(Vector2f(level1.getSize().x, level1.getSize().y));
-	l1.setFillColor(Color::White);
-	l1.setPosition(0, 0);
-	l1.setTexture(&level1);
-
-	//obeject för mark colision detection
-	RectangleShape l1m1(Vector2f(1991.f, 2.f));
-	l1m1.setFillColor(Color::Transparent);
-	l1m1.setPosition(64, 827);
-	RectangleShape l1m2(Vector2f(1991.f, 4.f));
-	l1m2.setFillColor(Color::Transparent);
-	l1m2.setPosition(64, 829);
-	//lava colision detection
-	RectangleShape lava(Vector2f(window.getSize().x, 2.f));
-	lava.setFillColor(Color::White);
-	lava.setPosition(0, 921);
-
-	//Fiende: Liten Syphoid
-	Ssyphoid ss1(0, 5, l1m1.getPosition().x, l1m1.getSize().x);
-	Ssyphoid ss2(1, 5, l1m1.getPosition().x, l1m1.getSize().x);
-	Ssyphoid ss3(2, 100, l1m1.getPosition().x, l1m1.getSize().x);
-
-	//ratchet/spelare
-	float startPosX = 980;
-	float StartPosY = 550;
-	Ratchet ratchet(startPosX, StartPosY);
-
-	//start kordinater för projektil
-	float BulletSpawnX = 0, BulletSpawnY = 0;
-	Vertex BulletSpawn[2] = {
-		Vertex(Vector2f(ratchet.getArmPosX(), ratchet.getArmPosY())),
-		Vertex(Vector2f(ratchet.getArmPosX() + 150 * cos(ratchet.getArmRotation() * (PI / 180) + 0.71), ratchet.getArmPosY() + 150 * sin(ratchet.getArmRotation() * (PI / 180) + 0.71)))
-	};
-	BulletSpawn[0].color = Color::Blue;
-	BulletSpawn[1].color = Color::Blue;
-	KPBullet ett(BulletSpawn[1].texCoords.x, BulletSpawn[1].texCoords.y);
-
-	//slut kordinater för projektil
-	float BulletRangeDieX = 0, BulletRangeDieY = 0;
-	Vertex Range[2] = {
-		Vertex(Vector2f(ratchet.getArmPosX(), ratchet.getArmPosY())),
-		Vertex(Vector2f(ratchet.getArmPosX() + 500 * cos(ratchet.getArmRotation() * (PI / 180) + 0.71), ratchet.getArmPosY() + 550 * sin(ratchet.getArmRotation() * (PI / 180) + 0.71)))
-	};
-	Range[0].color = Color::Red;
-	Range[1].color = Color::Red;
 
 	while (window.isOpen())
 	{
@@ -170,7 +106,6 @@ int main()
 					{
 						exit.setBackColor(Color::White);
 					}
-
 				default:
 					break;
 			}
@@ -197,15 +132,9 @@ int main()
 					}
 					else if (level == 1)
 					{
-						//spara start och slut kordinaterna för projektilen
-						BulletSpawnX = BulletSpawn[1].position.x;
-						BulletSpawnY = BulletSpawn[1].position.y;
-						BulletRangeDieX = Range[1].position.x;
-						BulletRangeDieY = Range[1].position.y;
 						//sät sanings värdet fired till sant för senare i kåden
 						fired = true;
 					}
-
 				default:
 					break;
 			}
@@ -248,135 +177,56 @@ int main()
 		//här loopas allt efter framelimitorn så här skrivs allt som animeras eller sker utannågon input
 		if (level == 1)
 		{
-			//gravitation och kolisions detection
-			if (ratchet.getGlobalBounds().intersects(l1m1.getGlobalBounds()))
-			{
-				ratchet.move(0.f, 0.f);
-			}
-			else
-			{
-				ratchet.move(0.f, 2.f);
-			}
-			if (ratchet.getGlobalBounds().intersects(l1m2.getGlobalBounds()))
-			{
-				ratchet.move(0.f, -2.f);
-			}
-
-			//förflyta positionen för projectilens start kordinat
-			BulletSpawn[0].position = Vector2f(ratchet.getArmPosX(), ratchet.getArmPosY());
-			BulletSpawn[1].position = Vector2f(ratchet.getArmPosX() + 150 * cos(ratchet.getArmRotation() * (PI / 180) + 0.715), ratchet.getArmPosY() + 150 * sin(ratchet.getArmRotation() * (PI / 180) + 0.715));
-			//förflyta positionen för projectilens slut kordinat
-			Range[0].position = Vector2f(ratchet.getArmPosX(), ratchet.getArmPosY());
-			Range[1].position = Vector2f(ratchet.getArmPosX() + 750 * cos(ratchet.getArmRotation() * (PI / 180) + 0.715), ratchet.getArmPosY() + 750 * sin(ratchet.getArmRotation() * (PI / 180) + 0.715));
-
+			game.markcolision();
+			game.takeDamage();
 			//rotera karaktärens arm
 			if (event.type == Event::MouseMoved)
 			{
-				ratchet.RotateArm();
+				game.RotateRatchetArm();
 			}
-
-			// stara Syphoidernas AI
-			ss1.AI(ratchet.getPositionX(), ratchet.getSizeX());
-			ss2.AI(ratchet.getPositionX(), ratchet.getSizeX());
-			ss3.AI(ratchet.getPositionX(), ratchet.getSizeX());
+			game.SyphoidernasAI();
 		}
 
 		//förflytning av karaktären höger, vänster och upp
 		if (left == true)
 		{
-			ratchet.move(-4.f, 0.f);
+			game.MoveRatchet(-4.f, 0.f);
 			left = false;
 		}
 		if (right == true)
 		{
-			ratchet.move(4, 0.f);
+			game.MoveRatchet(4, 0.f);
 			right = false;
 		}
 		if (jumpVal > 0 && jumpVal < 50)
 		{
 			if (left == true)
 			{
-				ratchet.move(-4.f, -4.f);
+				game.MoveRatchet(-4.f, -4.f);
 			}
 			else if (right == true)
 			{
-				ratchet.move(4.f, -4.f);
+				game.MoveRatchet(4.f, -4.f);
 			}
 			else
-				ratchet.move(0.f, -4.f);
+				game.MoveRatchet(0.f, -4.f);
 
 			jumpVal++;
 		}
 
-		//skande colision detection
-		if (ratchet.getHitBox().intersects(lava.getGlobalBounds()) ||ratchet.getHitBox().intersects(ss1.getGlobalBounds()) || ratchet.getHitBox().intersects(ss2.getGlobalBounds()) || ratchet.getHitBox().intersects(ss3.getGlobalBounds()))
-		{
-			ratchet.Damage();
-		}
-
-		//Förflyta kameran
-		if (ratchet.getPositionX() < 400 && l1.getPosition().x < 0)
-		{
-			//flyta leveln
-			l1.move(1.f, 0.f);
-			l1m1.move(1.f, 0.f);
-			l1m2.move(1.f, 0.f);
-
-			ratchet.move(1.f, 0.f);
-			ss1.move(1.f, 0.f);
-			ss2.move(1.f, 0.f);
-		}
-		else if (ratchet.getPositionX() > 1400 && l1.getPosition().x > -200)
-		{
-			//flyta leveln
-			l1.move(-1.f, 0.f);
-			l1m1.move(-1.f, 0.f);
-			l1m2.move(-1.f, 0.f);
-
-			ratchet.move(-1.f, 0.f);
-			ss1.move(-1.f, 0.f);
-			ss2.move(-1.f, 0.f);
-		}
-
 		//skot kolision
-		if (fired == true)
-		{
-			ett.Fired(BulletSpawnX, BulletSpawnY, BulletRangeDieX, BulletRangeDieY);
-			if (ett.getGlobalBounds().intersects(ss1.getGlobalBounds()))
-			{
-				ss1.DamageTaken(ett.power());
-				fired = false;
-				ett.setPosition(BulletSpawn[1].position.x, BulletSpawn[1].position.y);
-			}
-			if (ett.getGlobalBounds().intersects(ss2.getGlobalBounds()))
-			{
-				ss2.DamageTaken(ett.power());
-				fired = false;
-				ett.setPosition(BulletSpawn[1].position.x, BulletSpawn[1].position.y);
-			}
-			if (ett.getGlobalBounds().intersects(ss3.getGlobalBounds()))
-			{
-				ss3.DamageTaken(ett.power());
-				fired = false;
-				ett.setPosition(BulletSpawn[1].position.x, BulletSpawn[1].position.y);
-			}
-			if ((BulletRangeDieX > 0 && ett.getPosition().x > BulletRangeDieX) || (BulletRangeDieX < 0 && ett.getPosition().x < BulletRangeDieX))
-			{
-				fired = false;
-				ett.setPosition(BulletSpawn[1].position.x, BulletSpawn[1].position.y);
-			}
-		}
-		else
-			ett.setPosition(BulletSpawn[1].position.x, BulletSpawn[1].position.y);
+		game.fire(fired);
+		fired =game.hit(fired);
 
+		game.movelevel();
 		//rita upp på skärmen
 		window.clear(Color::Black);
 		if (passedTime <= seconds(4) && level == 0)
-			window.draw(title);
+			game.drawTitle(window);
 		else if (level == 0)
 		{
 			window.clear();
-			window.draw(mainmenu);
+			game.drawMenu(window);
 			start.drawTo(window);
 			load.drawTo(window);
 			exit.drawTo(window);
@@ -384,17 +234,12 @@ int main()
 		else if (level == 1)
 		{
 			window.clear(Color::White);
-			window.draw(l1);
-			window.draw(l1m1);
-			window.draw(l1m2);
-			window.draw(lava);
+			game.drawLevel(window);
 
-			ett.drawTo(window);
-			ratchet.drawTo(window);
+			game.drawBullet(window);
+			game.drawRatchet(window);
 
-			ss1.drawTo(window);
-			ss2.drawTo(window);
-			ss3.drawTo(window);
+			game.drawEnemys(window);
 		}
 		window.display();
 	}
