@@ -27,7 +27,7 @@ public:
 		player.setSize({ rsx, rsy });
 
 		collision.setSize({ 8, player.getSize().y });
-		collision.setFillColor(sf::Color::Yellow);
+		collision.setFillColor(sf::Color::Transparent);
 
 
 		arm.setSize({ 152, 136 });
@@ -43,11 +43,6 @@ public:
 		Range[1].position = sf::Vector2f(arm.getPosition().x + 500 * cos(arm.getRotation() * (PI / 180) + 0.71), arm.getPosition().y + 550 * sin(arm.getRotation() * (PI / 180) + 0.71));
 		Range[0].color = sf::Color::Blue;
 		Range[1].color = sf::Color::Blue;
-
-		player.setOutlineThickness(3);
-		player.setOutlineColor(sf::Color::Green);
-		arm.setOutlineThickness(3);
-		arm.setOutlineColor(sf::Color::Green);
 	}
 
 	void StartPos(sf::Vector2f pos)

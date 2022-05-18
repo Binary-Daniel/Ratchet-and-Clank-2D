@@ -1,3 +1,4 @@
+#pragma once
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
@@ -8,8 +9,20 @@ class RecButton
 public:
 	RecButton()
 	{}
+	RecButton(std::string t, sf::Vector2f size, int charSize, sf::Color bgColor, sf::Color textcolor)
+	{
+		text.setString(t);
+		text.setFillColor(textcolor);
+		text.setCharacterSize(charSize);
+		text.setOutlineColor(sf::Color::Black);
+		text.setOutlineThickness(1);
+		text.setOrigin(button.getLocalBounds().width, 25.f);
 
-	RecButton(std::string t, sf::Vector2f size, int charSize, sf::Color bgColor, sf::Color textcolor) {
+		button.setSize(size);
+		button.setFillColor(bgColor);
+	}
+	void setings(std::string t, sf::Vector2f size, int charSize, sf::Color bgColor, sf::Color textcolor)
+	{
 		text.setString(t);
 		text.setFillColor(textcolor);
 		text.setCharacterSize(charSize);

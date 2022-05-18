@@ -1,18 +1,84 @@
 #include "Entetys.h"
 #include "Platform/Platform.hpp"
 #include "charecters.h"
+#include "rectanglebutton.h"
 
 #define SFML_NO_DEPRECATED_WARNINGS
 
 class Menu
 {
 public:
-	Menu()
-	{}
-
-	void setSize(float Width, float Hight)
+	Menu(float Width, float Hight)
 	{
 		frame.setSize(sf::Vector2f(Width, Hight));
+		//skapa start knapp
+		start.setings("START", { 185, 80 }, 100, sf::Color::Transparent, sf::Color::White);
+		start.setPosition({ Width / 2 - 350, Hight / 2 - 150 });
+		//skapa load knapp
+		//har ingen funktion i denna verision gjord för senare verisioner
+		load.setings("LOAD", { 150, 80 }, 100, sf::Color::Transparent, sf::Color::Black);
+		load.setPosition({ Width / 2 - 350, Hight / 2 - 60 });
+		//skapa exit knapp
+		exit.setings("EXIT", { 150, 80 }, 100, sf::Color::Transparent, sf::Color::White);
+		exit.setPosition({ Width / 2 - 350, Hight / 2 + 30 });
+	}
+
+	void setFont(sf::Font& font)
+	{
+		start.setFont(font);
+		load.setFont(font);
+		exit.setFont(font);
+	}
+
+	void onHover(sf::RenderWindow& window)
+	{
+		//när musen hovrar över knaparna ändra färg
+		if (start.isMouseOver(window))
+		{
+			start.setBackColor(sf::Color::Green);
+		}
+		else
+		{
+			start.setBackColor(sf::Color::White);
+		}
+		if (load.isMouseOver(window))
+		{
+			load.setBackColor(sf::Color::Red);
+		}
+		else
+		{
+			load.setBackColor(sf::Color::Black);
+		}
+		if (exit.isMouseOver(window))
+		{
+			exit.setBackColor(sf::Color::Green);
+		}
+		else
+		{
+			exit.setBackColor(sf::Color::White);
+		}
+	}
+
+	int onClik(sf::RenderWindow& window,int& level)
+	{
+		//sätt funktion på knaparna
+		if (start.isMouseOver(window))
+		{
+			//starta leveln när start knapen trycks
+			return 1;
+		}
+		else if (load.isMouseOver(window))
+		{
+			//ska ha en funktion att lada spar filer i senare verisioner
+			return 0;
+		}
+		else if (exit.isMouseOver(window))
+		{
+			//stäng ned spelet när exit knapen trycks
+			window.close();
+			return 0;
+		}
+		return level;
 	}
 
 	void drawTitle(sf::RenderWindow& window)
@@ -30,11 +96,16 @@ public:
 		frame.setTexture(&Tframe);
 
 		window.draw(frame);
+		start.drawTo(window);
+		load.drawTo(window);
+		exit.drawTo(window);
 	}
 
 private:
 	sf::Texture Tframe;
 	sf::RectangleShape frame;
+	RecButton start, load, exit;
+	sf::Event event;
 };
 
 class Level
@@ -117,11 +188,8 @@ private:
 class Game
 {
 public:
-	Game(float x, float y)
+	Game(float x)
 	{
-		//Start Meny
-		menuframe.setSize(x, y);
-
 		//level obeject
 		//Agorinan Battleplex demo
 		Demo.setSize(x);
@@ -192,16 +260,18 @@ public:
 		ss3.AI(ratchet.getPosition().x, ratchet.getSize().x);
 	}
 
-	void fire(bool fired)
+	sf::Vector2f getBulletRange() const
+	{
+		return ratchet.getRange();
+	}
+	void fire(bool fired, float bulletendX, float bulletendY)
 	{
 		if (fired == true)
 		{
-			bullet.Fired(ratchet.getBulletSpawn().x, ratchet.getBulletSpawn().y, ratchet.getRange().x, ratchet.getRange().y);
+			bullet.Fired(ratchet.getBulletSpawn().x, ratchet.getBulletSpawn().y, bulletendX, bulletendY);
 		}
-		else
-			bullet.setPosition(ratchet.getBulletSpawn().x, ratchet.getBulletSpawn().y);
 	}
-	bool hit(bool fired)
+	bool hit(bool fired, float bulletendX)
 	{
 		if (fired == true)
 		{
@@ -223,7 +293,7 @@ public:
 				fired = false;
 				bullet.setPosition(ratchet.getBulletSpawn().x, ratchet.getBulletSpawn().y);
 			}
-			else if ((ratchet.getRange().x > 0 && bullet.getPosition().x > ratchet.getRange().x) || (ratchet.getRange().x < 0 && bullet.getPosition().x < ratchet.getRange().x))
+			else if ((bulletendX > 0 && bullet.getPosition().x > bulletendX) || (bulletendX < 0 && bullet.getPosition().x < bulletendX))
 			{
 				ss2.DamageTaken(bullet.power());
 				fired = false;
@@ -245,14 +315,6 @@ public:
 		ratchet.RotateArm();
 	}
 
-	void drawTitle(sf::RenderWindow& window)
-	{
-		menuframe.drawTitle(window);
-	}
-	void drawMenu(sf::RenderWindow& window)
-	{
-		menuframe.drawMenu(window);
-	}
 	void drawLevel(sf::RenderWindow& window)
 	{
 		Demo.drawLevel(window);
@@ -274,10 +336,9 @@ public:
 
 private:
 	float x, y;
-	Menu menuframe;
 	Level Demo;
 	Ratchet ratchet;
 	KPBullet bullet;
-	//bool fired = false;
 	Ssyphoid ss1, ss2, ss3;
+	sf::Event input;
 };
